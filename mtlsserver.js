@@ -1,12 +1,24 @@
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const execSync = require('child_process').execSync;
 const express = require('express');
 const app = express();
 
 const debugLog = (message) => {
     const timestamp = new Date().toISOString();
     console.log(`[${timestamp}] [DEBUG] ${message}`);
+};
+
+const generateCertificate = (keyFile, certFile) => {
+    try {
+        debugLog('Generating new certificate...');
+        execSync(`openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout ${keyFile} -out ${certFile} -subj "/C=US/ST=State/L=City/O=Organization/OU=OrgUnit/CN=localhost"`);
+        debugLog('New certificate generated successfully');
+    } catch (error) {
+        console.error('Error generating new certificate:', error);
+        throw error;
+    }
 };
 
 const loadCertificate = (filename) => {
@@ -27,10 +39,19 @@ const loadCertificate = (filename) => {
 };
 
 try {
+    const keyFile = 'server_key.pem';
+    const certFile = 'server_cert.pem';
+    const caFile = 'ca_cert.pem';
+
+    // Generate new certificates if they do not exist
+    if (!fs.existsSync(path.resolve(__dirname, keyFile)) || !fs.existsSync(path.resolve(__dirname, certFile))) {
+        generateCertificate(keyFile, certFile);
+    }
+
     const options = {
-        key: loadCertificate('server_key.pem'),
-        cert: loadCertificate('server_cert.pem'),
-        ca: loadCertificate('ca_cert.pem'),
+        key: loadCertificate(keyFile),
+        cert: loadCertificate(certFile),
+        ca: loadCertificate(caFile),
         requestCert: true,
         rejectUnauthorized: true,
         // allowed protocols and ciphers
