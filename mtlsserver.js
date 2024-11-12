@@ -5,6 +5,8 @@ const execSync = require('child_process').execSync;
 const express = require('express');
 const app = express();
 
+const DOMAIN_NAME = 'https://mtlsserver-52a108593257.herokuapp.com';
+
 const debugLog = (message) => {
     const timestamp = new Date().toISOString();
     console.log(`[${timestamp}] [DEBUG] ${message}`);
@@ -13,7 +15,7 @@ const debugLog = (message) => {
 const generateCertificate = (keyFile, certFile) => {
     try {
         debugLog('Generating new certificate...');
-        execSync(`openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout ${keyFile} -out ${certFile} -subj "/C=US/ST=State/L=City/O=Organization/OU=OrgUnit/CN=localhost"`);
+        execSync(`openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout ${keyFile} -out ${certFile} -subj "/C=US/ST=State/L=City/O=Organization/OU=OrgUnit/CN=${DOMAIN_NAME}"`);
         debugLog('New certificate generated successfully');
     } catch (error) {
         console.error('Error generating new certificate:', error);
